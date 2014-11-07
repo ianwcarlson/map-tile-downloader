@@ -13,6 +13,7 @@ module.exports = function(){
         max : 19,
         min : 1
     }
+    var maxDelay = 0;
     
     // main execution function
     function run(){
@@ -49,7 +50,7 @@ module.exports = function(){
                         //console.log('zoomIdx: ', zoomIdx,  'yIdx: ', yIdx, 'xIdx: ', xIdx);
                         //console.log('yIdx: ', yIdx);
                         //console.log('zoomIdx: ', zoomIdx);
-                        var delay = Math.random()*10000;
+                        var delay = Math.random()*maxDelay;
                         //console.log('delay: ', delay);
                         setTimeout(getAndStoreTile(baseUrl, zoomIdx, xIdx, yIdx, rootDir), delay);
                         numTiles++;
@@ -79,7 +80,7 @@ module.exports = function(){
         console.log(err);
         return 1;
     }
-    
+
     function getAndStoreTile(baseUrl, zoom, x, y, rootDir){
         return function(){
             http = require('http-get');
@@ -365,12 +366,20 @@ module.exports = function(){
         }
     }
 
+    function setMaxDelay(inputMaxDelay){
+        if (typeof inputMaxDelay === 'number' &&
+            inputMaxDelay > 0){
+            maxDelay = inputMaxDelay;
+        }
+    }
+
     return {
         run: run,
         setZoomMinMax: setZoomMinMax,
         setRootPath: setRootPath,
         setBasePath: setBasePath,
         setInputCoordinates: setInputCoordinates,
-        setMapUrlSuffix: setMapUrlSuffix
+        setMapUrlSuffix: setMapUrlSuffix,
+        setMaxDelay: setMaxDelay
     };
 };
