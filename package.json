@@ -1,0 +1,16 @@
+{
+  "name": "MapTileCollector",
+  "version": "0.0.0",
+  "description": "Downloads map image tiles from the web",
+  "main": "tileCache.js",
+  "dependencies": {
+    "http-get": "~0.5.10",
+    "prompt": "~0.2.13"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "ianwcarlson",
+  "license": "MIT"
+}
