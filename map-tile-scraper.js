@@ -12,8 +12,9 @@ module.exports = function(){
     var zoom = {
         max : 19,
         min : 1
-    }
+    };
     var maxDelay = 0;
+    var tileCount = 0;
     
     // main execution function
     function run(){
@@ -38,13 +39,7 @@ module.exports = function(){
                 console.log('minAndMaxValues: ', minAndMaxValues);
 
                 zoomFilePath = rootDir+zoomIdx.toString() + '/';
-                fs.mkdir(zoomFilePath, 0777, function(err){
-                    if (err){
-                        if (err.code !== 'EEXIST'){
-                            console.log(err);
-                        }
-                    }
-                });
+                fs.mkdir(zoomFilePath, 0777, mkdirErr);
                 for (var yIdx=minAndMaxValues.yMin; yIdx<=minAndMaxValues.yMax; yIdx++){
                     for (var xIdx=minAndMaxValues.xMin; xIdx<=minAndMaxValues.xMax; xIdx++){
                         //console.log('zoomIdx: ', zoomIdx,  'yIdx: ', yIdx, 'xIdx: ', xIdx);
@@ -76,6 +71,13 @@ module.exports = function(){
 
     */
     /* Function Declarations */
+    function mkdirErr(err){
+        if (err){
+            if (err.code !== 'EEXIST'){
+                console.log(err);
+            }
+        }
+    }
     function onErr(err){
         console.log(err);
         return 1;
@@ -123,15 +125,16 @@ module.exports = function(){
             http.get(fullUrl, fullPath, function(err){
                 if (err) {
                     console.log(err);
-                    console.log('HTTP request failed!')
+                    console.log('HTTP request failed!');
                 }
-
-            })
-        }
+                tileCount += 1;
+                console.log('T');
+            });
+        };
     }
 
     function buildDirPath(rootDir, zoom, secondParam){
-        return (rootDir + zoom.toString() + '/' + secondParam.toString() + '/')
+        return (rootDir + zoom.toString() + '/' + secondParam.toString() + '/');
     }
 
     function buildPath(rootDir, zoom, x, y){
@@ -145,12 +148,12 @@ module.exports = function(){
     function buildSuffixPath(zoom, x, y){
         var rtnString;
         if (mapSource === 'arcGis'){
-            rtnString = zoom.toString() + '/' + y.toString()
-                + '/' + x.toString();
+            rtnString = zoom.toString() + '/' + y.toString() + 
+            '/' + x.toString();
         }
         else if (mapSource === 'mapQuest'){
-            rtnString = zoom.toString() + '/' + x.toString()
-                + '/' + y.toString();
+            rtnString = zoom.toString() + '/' + x.toString() + 
+            '/' + y.toString();
         }
         return (rtnString);
     }
@@ -217,8 +220,8 @@ module.exports = function(){
     }
 
     function convLat2YTile(lat, zoom){
-        return (Math.floor((1-Math.log(Math.tan(lat)
-            + 1/Math.cos(lat))/Math.PI)/2 *Math.pow(2,zoom)));
+        return (Math.floor((1-Math.log(Math.tan(lat) + 
+            1/Math.cos(lat))/Math.PI)/2 *Math.pow(2,zoom)));
     }
 
     function convDecToRad(dec){
@@ -271,8 +274,8 @@ module.exports = function(){
 
     function validateInputString(inputString){
         var inputValid = false;
-        if (isDefinedNotNull(inputBaseUrl) &&
-            typeof inputBaseUrl === 'string'){ 
+        if (isDefinedNotNull(inputString) &&
+            typeof inputString === 'string'){ 
             inputValid = true;
         }
         return inputValid;   
@@ -313,15 +316,15 @@ module.exports = function(){
 
     function setBaseUrl(inputBaseUrl){
         if (validateInputString(inputBaseUrl)){
-            rootDir = inputBaseUrl;
+            baseUrl = inputBaseUrl;
         } else {
             console.log('Invalid base url');
         }
     }
 
-    function setInputCoordinates(lat, lng, sqkms){
+    function setInputCoordinates(lat, lng, sqKms){
         if (isDefinedNotNull(lat) && isDefinedNotNull(lng) &&
-            isDefinedNotNull(sqkms)){
+            isDefinedNotNull(sqKms)){
             inputCoordinates.lat = lat;
             inputCoordinates.lng = lng;
             inputCoordinates.sqKms = sqKms;
@@ -376,10 +379,28 @@ module.exports = function(){
     return {
         run: run,
         setZoomMinMax: setZoomMinMax,
+        getZoomMinMax: function(){
+            return zoom;
+        },
         setRootPath: setRootPath,
-        setBasePath: setBasePath,
+        getRootPath: function(){
+            return rootDir;
+        },
+        setBaseUrl: setBaseUrl,
+        getBaseUrl: function(){
+            return baseUrl;
+        },
         setInputCoordinates: setInputCoordinates,
+        getInputCoordinates: function(){
+            return inputCoordinates;
+        },
         setMapUrlSuffix: setMapUrlSuffix,
-        setMaxDelay: setMaxDelay
+        getMapUrlSuffix: function(){
+            return mapSourceSuffix;
+        },
+        setMaxDelay: setMaxDelay,
+        getMaxDelay: function(){
+            return mapDelay;
+        }
     };
 };

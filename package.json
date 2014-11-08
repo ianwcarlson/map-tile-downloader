@@ -2,12 +2,14 @@
   "name": "MapTileCollector",
   "version": "0.0.0",
   "description": "Downloads map image tiles from the web",
-  "main": "tileCache.js",
+  "main": "map-tile-scraper.js",
   "dependencies": {
-    "http-get": "~0.5.10",
-    "prompt": "~0.2.13"
+    "http-get": "~0.5.10"
   },
-  "devDependencies": {},
+  "devDependencies": {
+    "gulp": "^3.8.10",
+    "gulp-jshint": "^1.9.0"
+  },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
