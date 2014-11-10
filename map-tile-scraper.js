@@ -1,53 +1,42 @@
-module.exports = function(){
+module.exports = function(options){
+    var defaults = require('./map-tile-scraper-defaults.js');
+    var override = require('json-override');
+    var newOptions = override(defaults.defaults, options, true);
 
-    var baseUrl = '';
-    var rootDir = '';
-    var mapSource = '';
-    var mapSourceSuffix = '';
-    var inputCoordinates = {
-        lat: 0,
-        lng: 0,
-        sqKms : 0
-    };
-    var zoom = {
-        max : 19,
-        min : 1
-    };
-    var maxDelay = 0;
     var tileCount = 0;
     
     // main execution function
     function run(){
         fs = require('fs');
-        var inputValid = checkBounds(inputCoordinates);
+        var inputValid = checkBounds(newOptions.inputCoordinates);
         // TODO implement retry on checkBounds()
         if (inputValid){
-            var vertices = calcVertices(inputCoordinates);
+            var vertices = calcVertices(newOptions.inputCoordinates);
             var numTiles = 0;
-            fs.mkdir(rootDir, 0777, function(err){
+            fs.mkdir(newOptions.rootDir, 0777, function(err){
                 if (err){
                     if (err.code !== 'EEXIST'){
                         console.log(err);
                     }
                 }
             });
-            console.log('getting resources from: ' + baseUrl);
+            console.log('getting resources from: ' + newOptions.baseUrl);
             // for each zoom level 
-            for (var zoomIdx=zoom.min; zoomIdx<zoom.max; zoomIdx++){
-                // calculate min and max tile values 
+            for (var zoomIdx=newOptions.zoom.min; zoomIdx<newOptions.zoom.max; zoomIdx++){
+                // calculate min and max tile values
                 var minAndMaxValues = calcMinAndMaxValues(vertices, zoomIdx);
-                console.log('minAndMaxValues: ', minAndMaxValues);
+                //console.log('minAndMaxValues: ', minAndMaxValues);
 
-                zoomFilePath = rootDir+zoomIdx.toString() + '/';
+                zoomFilePath = newOptions.rootDir+zoomIdx.toString() + '/';
                 fs.mkdir(zoomFilePath, 0777, mkdirErr);
                 for (var yIdx=minAndMaxValues.yMin; yIdx<=minAndMaxValues.yMax; yIdx++){
                     for (var xIdx=minAndMaxValues.xMin; xIdx<=minAndMaxValues.xMax; xIdx++){
                         //console.log('zoomIdx: ', zoomIdx,  'yIdx: ', yIdx, 'xIdx: ', xIdx);
                         //console.log('yIdx: ', yIdx);
                         //console.log('zoomIdx: ', zoomIdx);
-                        var delay = Math.random()*maxDelay;
+                        var delay = Math.random()*newOptions.maxDelay;
                         //console.log('delay: ', delay);
-                        setTimeout(getAndStoreTile(baseUrl, zoomIdx, xIdx, yIdx, rootDir), delay);
+                        setTimeout(getAndStoreTile(newOptions.baseUrl, zoomIdx, xIdx, yIdx, newOptions.rootDir), delay);
                         numTiles++;
                     }
                 }
@@ -87,28 +76,13 @@ module.exports = function(){
         return function(){
             http = require('http-get');
             var fullUrl = buildUrl(baseUrl, zoom, x, y);
-            var dirPath;
             var fullPath = buildPath(rootDir, zoom, x, y);
-            // TODO add switch for xy reversal
-            if (mapSource === 'arcGis'){
-                dirPath = buildDirPath(rootDir, zoom, y);
-            }
-            else if (mapSource === 'mapQuestAerial' || mapSource === 'mapQuestOsm'){
-                dirPath = buildDirPath(rootDir, zoom, x);
-                //if (mapSource === 'mapQuestOsm'){
-                    fullPath += '.jpg';
-                    fullUrl += '.jpg';
-                //}
-                //else{
-                //    fullPath += '.png';
-                //    fullUrl += '.png';
-                //}
-            }
-            else {
-                dirPath = buildDirPath(rootDir, zoom, x);
-                fullPath += mapSourceSuffix;
-                fullUrl += mapSourceSuffix;    
-            }
+            var dirPath = (!newOptions.xBeforeY) ? 
+                buildDirPath(rootDir, zoom, y) : 
+                buildDirPath(rootDir, zoom, x);   
+
+            fullPath += newOptions.mapSourceSuffix;
+            fullUrl += newOptions.mapSourceSuffix; 
             //console.log('dirPath: ', dirPath);
             //console.log('fullPath: ', fullPath);
             //var hrTime = process.hrtime()
@@ -128,7 +102,7 @@ module.exports = function(){
                     console.log('HTTP request failed!');
                 }
                 tileCount += 1;
-                console.log('T');
+                process.stdout.write(tileCount);
             });
         };
     }
@@ -147,11 +121,11 @@ module.exports = function(){
 
     function buildSuffixPath(zoom, x, y){
         var rtnString;
-        if (mapSource === 'arcGis'){
+        if (newOptions.mapSource === 'arcGis'){
             rtnString = zoom.toString() + '/' + y.toString() + 
             '/' + x.toString();
         }
-        else if (mapSource === 'mapQuest'){
+        else if (newOptions.mapSource === 'mapQuest'){
             rtnString = zoom.toString() + '/' + x.toString() + 
             '/' + y.toString();
         }
@@ -179,8 +153,8 @@ module.exports = function(){
         var vertices = {};
         var radius = calcRadius(result.sqKms);
         var distance = radius * Math.SQRT2;
-        var centerRadLat = convDecToRad(result.latitude);
-        var centerRadLon = convDecToRad(result.longitude);
+        var centerRadLat = convDecToRad(result.lat);
+        var centerRadLon = convDecToRad(result.lng);
 
         vertices.upperRight = calcEndPoint(centerRadLat, centerRadLon,
             distance, Math.PI/4);
@@ -300,59 +274,33 @@ module.exports = function(){
         return validParams;  
     }
 
-    function setZoomMinMax(inputZoom){
-        if (validateZoom(inputZoom)){
-            zoom = inputZoom;        
-        }
-    }
-
-    function setRootPath(inputRootPath){
-        if (validateInputString(inputRootPath)){
-            rootDir = inputRootPath;
-        } else {
-            console.log('Invalid root path');
-        }
-    }
-
-    function setBaseUrl(inputBaseUrl){
-        if (validateInputString(inputBaseUrl)){
-            baseUrl = inputBaseUrl;
-        } else {
-            console.log('Invalid base url');
-        }
-    }
-
     function setInputCoordinates(lat, lng, sqKms){
         if (isDefinedNotNull(lat) && isDefinedNotNull(lng) &&
             isDefinedNotNull(sqKms)){
-            inputCoordinates.lat = lat;
-            inputCoordinates.lng = lng;
-            inputCoordinates.sqKms = sqKms;
+            newOptions.inputCoordinates.lat = lat;
+            newOptions.inputCoordinates.lng = lng;
+            newOptions.inputCoordinates.sqKms = sqKms;
         }
     }
 
-    function setBaseUrlByHostName(inputMapSource){
-        inputValid = true;
+    function setUrlByMapProvider(inputMapSource){
+        var inputValid = false;
         if (validateInputString(inputMapSource)){
-            switch (inputMapSource){
-                case 'mapQuestAerial':
-                    baseUrl = 'http://otile1.mqcdn.com/tiles/1.0.0/sat/';
-                    mapSource = inputMapSource;
-                    break;
-                case 'mapQuestOsm':
-                    baseUrl = 'http://otile1.mqcdn.com/tiles/1.0.0/map/';
-                    mapSource = inputMapSource;
-                    break;
-                case 'arcGis':
-                    baseUrl = 'http://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/';
-                    mapSource = inputMapSource;
-                    break;  
-                default:
-                    inputValid = false;
-                    break;     
+            newOptions.mapSource = inputMapSource;
+            if (inputMapSource == 'mapQuestAerial' || inputMapSource == 'mapQuestOsm'){
+                newOptions.baseUrl = (inputMapSource == 'mapQuestAerial') ?
+                    defaults.providerUrls.mapQuestAerial :
+                    defaults.providerUrls.mapQuestOsm;    
+                newOptions.mapSourceSuffix = '.jpg';
+                newOptions.xBeforeY = true;  
+                inputValid = true;  
+            } 
+            else if (inputMapSource == 'arcGis'){
+                newOptions.baseUrl = defaults.providerUrls.arcGis;
+                newOptions.mapSourceSuffix = '';
+                newOptions.xBeforeY = false;
+                inputValid = true; 
             }
-        } else {
-            inputValid = false;
         }
 
         if (!inputValid){
@@ -360,47 +308,18 @@ module.exports = function(){
         }
     }
 
-    function setMapUrlSuffix(inputMapSuffix){
-        if (validateInputString(inputMapSuffix)){
-            mapSourceSuffix = inputMapSuffix;
-        }
-        else {
-            console.log('Must input valid string');
-        }
-    }
-
-    function setMaxDelay(inputMaxDelay){
-        if (typeof inputMaxDelay === 'number' &&
-            inputMaxDelay > 0){
-            maxDelay = inputMaxDelay;
-        }
-    }
-
     return {
         run: run,
-        setZoomMinMax: setZoomMinMax,
-        getZoomMinMax: function(){
-            return zoom;
-        },
-        setRootPath: setRootPath,
-        getRootPath: function(){
-            return rootDir;
-        },
-        setBaseUrl: setBaseUrl,
-        getBaseUrl: function(){
-            return baseUrl;
-        },
         setInputCoordinates: setInputCoordinates,
         getInputCoordinates: function(){
-            return inputCoordinates;
+            return newOptions.inputCoordinates;
         },
-        setMapUrlSuffix: setMapUrlSuffix,
-        getMapUrlSuffix: function(){
-            return mapSourceSuffix;
+        setOptions: function(inputOptions){
+            newOptions = override(defaults.defaults, inputOptions, true);
         },
-        setMaxDelay: setMaxDelay,
-        getMaxDelay: function(){
-            return mapDelay;
-        }
+        getOptions: function(){
+            return newOptions;
+        },
+        setUrlByMapProvider: setUrlByMapProvider       
     };
 };

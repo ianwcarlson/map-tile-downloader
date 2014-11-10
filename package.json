@@ -4,7 +4,8 @@
   "description": "Downloads map image tiles from the web",
   "main": "map-tile-scraper.js",
   "dependencies": {
-    "http-get": "~0.5.10"
+    "http-get": "~0.5.10",
+    "json-override": "^0.2.0"
   },
   "devDependencies": {
     "gulp": "^3.8.10",
