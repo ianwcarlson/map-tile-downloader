@@ -5,7 +5,8 @@
   "main": "map-tile-scraper.js",
   "dependencies": {
     "http-get": "~0.5.10",
-    "json-override": "^0.2.0"
+    "json-override": "^0.2.0",
+    "progress": "^1.1.8"
   },
   "devDependencies": {
     "gulp": "^3.8.10",

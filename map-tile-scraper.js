@@ -8,11 +8,18 @@ module.exports = function(options){
     // main execution function
     function run(){
         fs = require('fs');
+        var ProgressBar = require('progress');
+        console.log();
+        var bar = new ProgressBar('  downloading [:bar] :percent :etas', { 
+            total: 1000,
+            incomplete: '',
+            width: 20 });
         var inputValid = checkBounds(newOptions.inputCoordinates);
         // TODO implement retry on checkBounds()
         if (inputValid){
             var vertices = calcVertices(newOptions.inputCoordinates);
             var numTiles = 0;
+            //console.log('vertices: ', vertices);
             fs.mkdir(newOptions.rootDir, 0777, function(err){
                 if (err){
                     if (err.code !== 'EEXIST'){
@@ -20,7 +27,7 @@ module.exports = function(options){
                     }
                 }
             });
-            console.log('getting resources from: ' + newOptions.baseUrl);
+            //console.log('getting resources from: ' + newOptions.baseUrl);
             // for each zoom level 
             for (var zoomIdx=newOptions.zoom.min; zoomIdx<newOptions.zoom.max; zoomIdx++){
                 // calculate min and max tile values
@@ -42,6 +49,7 @@ module.exports = function(options){
                 }
             }
             console.log('total number of tiles: ', numTiles);
+            
         }
     }
 
@@ -81,7 +89,7 @@ module.exports = function(options){
                 buildDirPath(rootDir, zoom, y) : 
                 buildDirPath(rootDir, zoom, x);   
 
-            fullPath += newOptions.mapSourceSuffix;
+            //fullPath += newOptions.mapSourceSuffix;
             fullUrl += newOptions.mapSourceSuffix; 
             //console.log('dirPath: ', dirPath);
             //console.log('fullPath: ', fullPath);
@@ -95,14 +103,13 @@ module.exports = function(options){
                     }
                 }
             });
-            //console.log('attempting to get resource from: ', fullUrl)
             http.get(fullUrl, fullPath, function(err){
                 if (err) {
                     console.log(err);
                     console.log('HTTP request failed!');
                 }
                 tileCount += 1;
-                process.stdout.write(tileCount);
+            
             });
         };
     }
@@ -121,11 +128,11 @@ module.exports = function(options){
 
     function buildSuffixPath(zoom, x, y){
         var rtnString;
-        if (newOptions.mapSource === 'arcGis'){
+        if (!newOptions.xBeforeY){
             rtnString = zoom.toString() + '/' + y.toString() + 
             '/' + x.toString();
         }
-        else if (newOptions.mapSource === 'mapQuest'){
+        else if (newOptions.xBeforeY){
             rtnString = zoom.toString() + '/' + x.toString() + 
             '/' + y.toString();
         }
@@ -165,7 +172,7 @@ module.exports = function(options){
         vertices.upperLeft = calcEndPoint(centerRadLat, centerRadLon,
             distance, 7*Math.PI/4);
 
-        printVertices(vertices);
+        //printVertices(vertices);
 
         return vertices;
     }

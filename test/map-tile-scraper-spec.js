@@ -89,7 +89,19 @@ describe("map-tile-scraper", function(){
 	it("should download the correct tiles based on map provider", function(){
 
 		var testMapScraper = mapTileScraperModule(testFixtures.testObject0);	
-		testMapScraper.setUrlByMapProvider('arcGis');
+		//testMapScraper.setUrlByMapProvider('arcGis');
+		var testOptions = {
+			baseUrl: 'http://api.tiles.mapbox.com/v4/iancarlson3000.g9no2eg2/',
+			rootDir: 'mapbox/',
+			mapSourceSuffix: '.jpg90?access_token=pk.eyJ1IjoiaWFuY2FybHNvbjMwMDAiLCJhIjoib1hRZlNoRSJ9.yEX3JTcra1PvRLws51hWyg',
+			inputCoordinates: {
+				lat: 33.0,
+				lng: -106.0,
+				sqKms: 0.1
+			},
+			xBeforeY: true
+		}
+		testMapScraper.setOptions(testOptions);
 		testMapScraper.run();
 	});
 
