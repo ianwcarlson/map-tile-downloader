@@ -27,7 +27,7 @@ module.exports = function(options){
                     }
                 }
             });
-            //console.log('getting resources from: ' + newOptions.baseUrl);
+            console.log('getting resources from: ' + newOptions.baseUrl);
             // for each zoom level 
             for (var zoomIdx=newOptions.zoom.min; zoomIdx<newOptions.zoom.max; zoomIdx++){
                 // calculate min and max tile values
@@ -322,7 +322,7 @@ module.exports = function(options){
             return newOptions.inputCoordinates;
         },
         setOptions: function(inputOptions){
-            newOptions = override(defaults.defaults, inputOptions, true);
+            newOptions = override(newOptions, inputOptions, true);
         },
         getOptions: function(){
             return newOptions;

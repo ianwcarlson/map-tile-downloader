@@ -86,10 +86,9 @@ describe("map-tile-scraper", function(){
 		expect(mapQuestAerialOptions.xBeforeY).toEqual(false);
 	});
 
-	it("should download the correct tiles based on map provider", function(){
+	it("should download the correct tiles based on custom options", function(){
 
 		var testMapScraper = mapTileScraperModule(testFixtures.testObject0);	
-		//testMapScraper.setUrlByMapProvider('arcGis');
 		var testOptions = {
 			baseUrl: 'http://api.tiles.mapbox.com/v4/iancarlson3000.g9no2eg2/',
 			rootDir: 'mapbox/',
@@ -101,7 +100,22 @@ describe("map-tile-scraper", function(){
 			},
 			xBeforeY: true
 		}
+
 		testMapScraper.setOptions(testOptions);
+		testMapScraper.run();
+	});
+
+	it("should download the correct tiles based on presets", function(){
+		var testMapScraper = mapTileScraperModule({});	
+		testMapScraper.setUrlByMapProvider('mapQuestAerial');
+		testMapScraper.setOptions({
+			rootDir: 'mapQuestAerial/',
+			inputCoordinates: {
+				lat: 33.0,
+				lng: -106.0,
+				sqKms: 0.1
+			}
+		});
 		testMapScraper.run();
 	});
 
