@@ -15,11 +15,11 @@ module.exports = function(options){
             incomplete: '',
             width: 20 });
         var inputValid = checkBounds(newOptions.inputCoordinates);
-        // TODO implement retry on checkBounds()
+
         if (inputValid){
             var vertices = calcVertices(newOptions.inputCoordinates);
             var numTiles = 0;
-            //console.log('vertices: ', vertices);
+
             fs.mkdir(newOptions.rootDir, 0777, function(err){
                 if (err){
                     if (err.code !== 'EEXIST'){
@@ -32,17 +32,12 @@ module.exports = function(options){
             for (var zoomIdx=newOptions.zoom.min; zoomIdx<newOptions.zoom.max; zoomIdx++){
                 // calculate min and max tile values
                 var minAndMaxValues = calcMinAndMaxValues(vertices, zoomIdx);
-                //console.log('minAndMaxValues: ', minAndMaxValues);
 
                 zoomFilePath = newOptions.rootDir+zoomIdx.toString() + '/';
                 fs.mkdir(zoomFilePath, 0777, mkdirErr);
                 for (var yIdx=minAndMaxValues.yMin; yIdx<=minAndMaxValues.yMax; yIdx++){
                     for (var xIdx=minAndMaxValues.xMin; xIdx<=minAndMaxValues.xMax; xIdx++){
-                        //console.log('zoomIdx: ', zoomIdx,  'yIdx: ', yIdx, 'xIdx: ', xIdx);
-                        //console.log('yIdx: ', yIdx);
-                        //console.log('zoomIdx: ', zoomIdx);
                         var delay = Math.random()*newOptions.maxDelay;
-                        //console.log('delay: ', delay);
                         setTimeout(getAndStoreTile(newOptions.baseUrl, zoomIdx, xIdx, yIdx, newOptions.rootDir), delay);
                         numTiles++;
                     }
@@ -89,12 +84,7 @@ module.exports = function(options){
                 buildDirPath(rootDir, zoom, y) : 
                 buildDirPath(rootDir, zoom, x);   
 
-            //fullPath += newOptions.mapSourceSuffix;
             fullUrl += newOptions.mapSourceSuffix; 
-            //console.log('dirPath: ', dirPath);
-            //console.log('fullPath: ', fullPath);
-            //var hrTime = process.hrtime()
-            //console.log(hrTime[0] * 1000 + hrTime[1] / 1000)
 
             fs.mkdir(dirPath, 0777, function(err){
                 if (err){
@@ -147,11 +137,6 @@ module.exports = function(options){
         minAndMaxObj.xMin = convLon2XTile(vertices.lowerLeft.lon, zoom);
         minAndMaxObj.yMin = convLat2YTile(vertices.upperRight.lat, zoom);
         minAndMaxObj.xMax = convLon2XTile(vertices.upperRight.lon, zoom);
-
-        //console.log('upperLeft.lat: ', convLat2YTile(vertices.upperLeft.lat, zoom))
-        //console.log('upperLeft.lon: ', convLon2XTile(vertices.upperLeft.lon, zoom))
-        //console.log('lowerRight.lat: ', convLat2YTile(vertices.lowerRight.lat, zoom))
-        //console.log('lowerRight.lon: ', convLon2XTile(vertices.lowerRight.lon, zoom))
 
         return minAndMaxObj;
     }
