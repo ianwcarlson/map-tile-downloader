@@ -48,8 +48,7 @@ module.exports = function(options){
             } else {
                 callback(new Error('Invalid input coordinates'));
             }
-        })
-        //callback(null);
+        });
     }
 
     /* Diagram of Vertices
