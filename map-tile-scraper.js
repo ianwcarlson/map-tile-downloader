@@ -1,3 +1,4 @@
+
 module.exports = function(options){
     var defaults = require('./map-tile-scraper-defaults.js');
     var override = require('json-override');
@@ -6,46 +7,49 @@ module.exports = function(options){
     var tileCount = 0;
     
     // main execution function
-    function run(){
-        fs = require('fs');
-        var ProgressBar = require('progress');
-        console.log();
-        var bar = new ProgressBar('  downloading [:bar] :percent :etas', { 
-            total: 1000,
-            incomplete: '',
-            width: 20 });
-        var inputValid = checkBounds(newOptions.inputCoordinates);
+    function run(callback){
+        var d = require('domain').create();
+        d.on('error', function(err){
+            callback(err);
+        });
+        d.run(function(){
+            fs = require('fs');
+            var inputValid = checkBounds(newOptions.inputCoordinates);
 
-        if (inputValid){
-            var vertices = calcVertices(newOptions.inputCoordinates);
-            var numTiles = 0;
+            if (inputValid){
+                var vertices = calcVertices(newOptions.inputCoordinates);
+                var numTiles = 0;
 
-            fs.mkdir(newOptions.rootDir, 0777, function(err){
-                if (err){
-                    if (err.code !== 'EEXIST'){
-                        console.log(err);
+                try {fs.mkdirSync(newOptions.rootDir, 0777);}
+                catch(err){
+                    if (err.code !== 'EEXIST') callback(err);
+                }
+                console.log('getting resources from: ' + newOptions.baseUrl);
+                // for each zoom level 
+                for (var zoomIdx=newOptions.zoom.min; zoomIdx<newOptions.zoom.max; zoomIdx++){
+                    // calculate min and max tile values
+                    var minAndMaxValues = calcMinAndMaxValues(vertices, zoomIdx);
+
+                    zoomFilePath = newOptions.rootDir+zoomIdx.toString() + '/';
+
+                    try{fs.mkdirSync(zoomFilePath, 0777);}
+                    catch (err){
+                        if (err.code !== 'EEXIST') callback(err);
+                    }
+                    for (var yIdx=minAndMaxValues.yMin; yIdx<=minAndMaxValues.yMax; yIdx++){
+                        for (var xIdx=minAndMaxValues.xMin; xIdx<=minAndMaxValues.xMax; xIdx++){
+                            var delay = Math.random()*newOptions.maxDelay;
+                            setTimeout(getAndStoreTile(newOptions.baseUrl, zoomIdx, xIdx, yIdx, newOptions.rootDir), delay);
+                            numTiles++;
+                        }
                     }
                 }
-            });
-            console.log('getting resources from: ' + newOptions.baseUrl);
-            // for each zoom level 
-            for (var zoomIdx=newOptions.zoom.min; zoomIdx<newOptions.zoom.max; zoomIdx++){
-                // calculate min and max tile values
-                var minAndMaxValues = calcMinAndMaxValues(vertices, zoomIdx);
-
-                zoomFilePath = newOptions.rootDir+zoomIdx.toString() + '/';
-                fs.mkdir(zoomFilePath, 0777, mkdirErr);
-                for (var yIdx=minAndMaxValues.yMin; yIdx<=minAndMaxValues.yMax; yIdx++){
-                    for (var xIdx=minAndMaxValues.xMin; xIdx<=minAndMaxValues.xMax; xIdx++){
-                        var delay = Math.random()*newOptions.maxDelay;
-                        setTimeout(getAndStoreTile(newOptions.baseUrl, zoomIdx, xIdx, yIdx, newOptions.rootDir), delay);
-                        numTiles++;
-                    }
-                }
+                console.log('total number of tiles: ', numTiles);           
+            } else {
+                callback(new Error('Invalid input coordinates'));
             }
-            console.log('total number of tiles: ', numTiles);
-            
-        }
+        })
+        //callback(null);
     }
 
     /* Diagram of Vertices
@@ -66,18 +70,16 @@ module.exports = function(options){
     function mkdirErr(err){
         if (err){
             if (err.code !== 'EEXIST'){
-                console.log(err);
+                throw err;
             }
         }
-    }
-    function onErr(err){
-        console.log(err);
-        return 1;
     }
 
     function getAndStoreTile(baseUrl, zoom, x, y, rootDir){
         return function(){
-            http = require('http-get');
+
+            var http = require('http-get');
+            
             var fullUrl = buildUrl(baseUrl, zoom, x, y);
             var fullPath = buildPath(rootDir, zoom, x, y);
             var dirPath = (!newOptions.xBeforeY) ? 
@@ -86,20 +88,14 @@ module.exports = function(options){
 
             fullUrl += newOptions.mapSourceSuffix; 
 
-            fs.mkdir(dirPath, 0777, function(err){
-                if (err){
-                    if (err.code !== 'EEXIST'){
-                        console.log(err);
-                    }
-                }
-            });
+            try {fs.mkdirSync(dirPath, 0777);}
+            catch(err){
+                if (err.code !== 'EEXIST') throw err;
+            } 
+
             http.get(fullUrl, fullPath, function(err){
-                if (err) {
-                    console.log(err);
-                    console.log('HTTP request failed!');
-                }
+                if (err) throw err; 
                 tileCount += 1;
-            
             });
         };
     }
@@ -206,12 +202,12 @@ module.exports = function(options){
     }
 
     function checkBounds(result) {
-        if (result.latitude > 90 || result.latitude < -90){
+        if (result.lat > 90 || result.lat < -90){
             console.log('latitude should be less than 90 and greater than' +
                 '-90');
             return false;
         }
-        if (result.longitude > 180 || result.longitude < -180){
+        if (result.lng > 180 || result.lng < -180){
             console.log('longitude should be less than 180 and greater than' +
                 '-180');
             return false;
