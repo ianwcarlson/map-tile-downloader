@@ -43,7 +43,7 @@
  * @param {OptionsType} options - input options. can also set via setOptions() method
  */
 module.exports = function(options){
-    var defaults = require('./map-tile-scraper-defaults.js');
+    var defaults = require('./map-tile-downloader-defaults.js');
     var override = require('json-override');
     var newOptions = override(defaults.defaults, options, true);
 

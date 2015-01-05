@@ -1,8 +1,8 @@
-var mapTileScraperModule = require('../map-tile-scraper.js');
+var mapTileScraperModule = require('../map-tile-downloader.js');
 var myMapScraper = mapTileScraperModule({});
-var defaults = require('../map-tile-scraper-defaults.js');
+var defaults = require('../map-tile-downloader-defaults.js');
 var testFixtures = require('./testFixtures.js');
-describe("map-tile-scraper", function(){
+describe("map-tile-downloader", function(){
 	
 	it("should set and get well", function(){
 		var defaultsGetter = myMapScraper.getOptions();		
