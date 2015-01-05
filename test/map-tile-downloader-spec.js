@@ -90,9 +90,6 @@ describe("map-tile-downloader", function(){
 
 		var testMapScraper = mapTileScraperModule(testFixtures.testObject0);	
 		var testOptions = {
-			baseUrl: 'http://api.tiles.mapbox.com/v4/iancarlson3000.g9no2eg2/',
-			rootDir: 'mapbox/',
-			mapSourceSuffix: '.jpg90?access_token=pk.eyJ1IjoiaWFuY2FybHNvbjMwMDAiLCJhIjoib1hRZlNoRSJ9.yEX3JTcra1PvRLws51hWyg',
 			inputCoordinates: {
 				lat: 91.0,
 				lng: -106.0,
@@ -122,29 +119,6 @@ describe("map-tile-downloader", function(){
 		testOptions.inputCoordinates.lng = 181.0;
 		testMapScraper.setOptions(testOptions);
 		testMapScraper.run(function(err){		
-			expect(err).toBeTruthy();
-		});
-	});
-
-	it("should download the correct tiles based on custom options", function(){
-
-		var testMapScraper = mapTileScraperModule(testFixtures.testObject0);	
-		var testOptions = {
-			baseUrl: 'http://api.tiles.mapbox.com/v4/iancarlson3000.g9no2eg2/',
-			rootDir: 'mapbox/',
-			mapSourceSuffix: '.jpg90?access_token=pk.eyJ1IjoiaWFuY2FybHNvbjMwMDAiLCJhIjoib1hRZlNoRSJ9.yEX3JTcra1PvRLws51hWyg',
-			inputCoordinates: {
-				lat: 33.0,
-				lng: -106.0,
-				sqKms: 0.1
-			},
-			xBeforeY: true
-		}
-
-		testMapScraper.setOptions(testOptions);
-
-		testMapScraper.run(function(err){
-			console.log(err);
 			expect(err).toBeTruthy();
 		});
 	});
