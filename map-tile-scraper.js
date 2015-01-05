@@ -1,4 +1,47 @@
+/**
+ * @module map-tile-scraper
+ */
 
+/** 
+ * @namespace Typedefs
+ */
+
+/**
+ * @typedef {Object} CoordinatesObjectType
+ * @property {Number} lat - latitude degrees(must be between -90 and 90 degrees)
+ * @property {Number} lng - longitude degrees (must be between -180 and 180)
+ * @property {Number} sqKms - the number of square kilometers in the radius 
+ * calculation.  Must be positive and less then 509e6 (surface area of earth)
+ * @memberOf Typedefs
+ */
+
+/**
+ * @typedef {Object} ZoomObjectType
+ * @property {Number} max - maximum zoom level (zoomed in).  
+ * @property {Number} min - minimum zoom level (zoomed out)
+ * @memberOf Typedefs
+ */
+
+/**
+ * @typedef {Object} OptionsObjectType
+ * @property {String} baseUrl - Base URL of the map tile server
+ * @property {String} rootDir - Root path of where the images will be stored
+ * @property {String} mapSource - Map source selectors that serve as an easier
+ * method of providing known good baseUrls for map tile servers
+ * @property {String} mapSourceSuffix - File extensions of each map tile on the server
+ * @property {CoordinatesObjectType} inputCoordinates - Lattitude/longitude coordinates
+ * to base the area calculation on 
+ * @property {ZoomObjectType} zoom - Max and min zoom levels
+ * @property {Number} maxDelay - Provides a way to throttle the requests
+ * @property {Boolean} xBeforeY - A Switch that provides a way to flip x and y 
+ * coordinates since some map servers do it that way
+ * @memberOf Typedefs
+ */
+
+/**
+ * Constructor for module.  
+ * @param {OptionsType} options - input options. can also set via setOptions() method
+ */
 module.exports = function(options){
     var defaults = require('./map-tile-scraper-defaults.js');
     var override = require('json-override');
@@ -6,7 +49,13 @@ module.exports = function(options){
 
     var tileCount = 0;
     
-    // main execution function
+    /**
+     * Main execution function. Once all the parameters are set, this function starts
+     * the process of calculating the square area and asynchronously downloading the tiles
+     * in randomish order.   
+     * @param {Function} callback - This function is only when errors occur with error as 
+     * the first argument
+     */
     function run(callback){
         var d = require('domain').create();
         d.on('error', function(err){
@@ -211,7 +260,8 @@ module.exports = function(options){
                 '-180');
             return false;
         }
-        if (result.sqKms > 100000 || result.sqKms < 0){
+        var SURFACE_AREA_OF_EARTH = 509000000;
+        if (result.sqKms > SURFACE_AREA_OF_EARTH || result.sqKms < 0){
             console.log('sqKms should be greater than 0 and less than 10');
             return false;
         }
@@ -256,11 +306,20 @@ module.exports = function(options){
         }
 
         if (!validParams){
-            console.log('Invalid input zoom parameters (0-19), max greater than min');
+            throw new Error('Invalid input zoom parameters (0-19), max greater than min');
         } 
         return validParams;  
     }
 
+    /**
+     * If the input coordinates were not set in the constructor, then the user will
+     * use this method to do so.  It also provides a way to dynamically set the 
+     * coordinates without setting the other properties.  The parameters basically
+     * depict a square with sqKms equaling half the length of one side.
+     * @param {Number} lat - Latitude 
+     * @param {Number} lng - Longitude
+     * @param {Number} sqKms - The radius in square kilometers
+     */
     function setInputCoordinates(lat, lng, sqKms){
         if (isDefinedNotNull(lat) && isDefinedNotNull(lng) &&
             isDefinedNotNull(sqKms)){
@@ -270,6 +329,12 @@ module.exports = function(options){
         }
     }
 
+    /**
+     * Convenience method that figures out the advanced properties to generate
+     * the correct URLs for downloading.  
+     * @param {String} inputMapSource - Input map source. Acceptable values are 
+     * 'mapQuestAerial', 'mapQuestOsm' and 'arcGis'
+     */
     function setUrlByMapProvider(inputMapSource){
         var inputValid = false;
         if (validateInputString(inputMapSource)){
@@ -291,19 +356,33 @@ module.exports = function(options){
         }
 
         if (!inputValid){
-            console.log("Invalid host name (i.e., 'mapQuestAerial','mapQuestOsm)");
+            throw new Error("Invalid host name (i.e., 'mapQuestAerial','mapQuestOsm)");
         }
     }
 
     return {
         run: run,
         setInputCoordinates: setInputCoordinates,
+        /**
+         * Helper method used mainly for testing
+         * @returns {CoordinatesObjectType}
+         * @public
+         */
         getInputCoordinates: function(){
             return newOptions.inputCoordinates;
         },
+        /**
+         * Set the options for this module.  They will override only the properties
+         * that are different
+         * @returns {CoordinatesObjectType}
+         */
         setOptions: function(inputOptions){
             newOptions = override(newOptions, inputOptions, true);
         },
+        /**
+         * Helper method used mainly for testing
+         * @returns {OptionsObjectType}
+         */
         getOptions: function(){
             return newOptions;
         },
