@@ -1,4 +1,4 @@
-# map-tile-downloader
+# [Unsupported] map-tile-downloader
 
 NodeJS module that calculates a square area and downloads all the map tiles contained in that area at the specified zoom levels.  The tiles can then be served up locally with a simple static file web server and a client-side map engine like [Leaflet](http://leafletjs.com/). Eventually I'd like to provide a basic map server here.
 
